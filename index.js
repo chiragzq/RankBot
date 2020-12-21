@@ -17,7 +17,6 @@ const ranks = [
     "<:skillgroup2:790415760673079327>",
     "<:skillgroup3:790415798140141588>",
     "<:skillgroup4:790415811558637628>",
-    "<:skillgroup4:790415811558637628>",
     "<:skillgroup5:790415823973515294>",
     "<:skillgroup6:790415835705376829>",
     "<:skillgroup7:790415849655238696>",
@@ -61,6 +60,7 @@ function parseData($) {
             let name = $(tds[0]).find("span").text();
             let identifier = !config.players[id] ? name : `**${config.players[id]}**`;
             let rank = Number(td3.slice(51,52));
+            console.log(name + " " + rank + " " + ranks[rank]);
 
             id2 += id + rank;
             sum += rank;
