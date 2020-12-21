@@ -70,7 +70,7 @@ function parseData($) {
             let id = url.slice(8);
             let td3 = $(tds[2]).html();
             let name = $(tds[0]).find("span").text();
-            let identifier = !config.players[id] ? name : config.players[id];
+            let identifier = !config.players[id] ? name : `**${config.players[id]}**`;
             let rank = Number(td3.slice(51,52));
 
             id2 += id + rank
