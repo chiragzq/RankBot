@@ -47,6 +47,7 @@ async function fetchLiveData(browser, id) {
 function parseData($) {
     let id2 = "";
     let bodies = $("table.scoreboard>tbody").toArray();
+    let names = [];
     bodies.splice(1,1);
     return [bodies.map(tbody => {
         let rows = $(tbody).find("tr").toArray();
@@ -60,12 +61,12 @@ function parseData($) {
             let name = $(tds[0]).find("span").text();
             let identifier = !config.players[id] ? name : `**${config.players[id]}**`;
             let rank = Number(td3.slice(51,52));
-
+            names.push(name);
             sum += rank;
             if(rank > 0) tot++;
             return [identifier, rank];
-        }).sort((i, j) => i[1] - j[1]).reverse().map(row => { id2 += "" + row; return row[0] + ": " + ranks[row[1]]}), ranks[Math.round(sum / tot)]];
-    }), id2];
+        }).sort((i, j) => i[1] - j[1]).reverse().map(row => {return row[0] + ": " + ranks[row[1]]}), ranks[Math.round(sum / tot)]];
+    }), names.sort().join("")];
 }
 
 async function sendWebhook(embed) {
@@ -115,6 +116,7 @@ async function sleep(ms) {
     while(true) {
         await refresh(browser);
         console.log("Refreshed at " + new Date());
+        if(new Date().getHours() == 2) await sleep(1000*60*60*7);
         await sleep(5000);
     }
 
