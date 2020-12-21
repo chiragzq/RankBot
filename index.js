@@ -8,42 +8,31 @@ const puppeteer = require("puppeteer-extra");
 
 puppeteer.use(StealthPlugin())
 
-const headers = {
-    "accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-    "accept-encoding":"gzip, deflate, br",
-    "accept-language":"en-US,en;q=0.9",
-    "sec-ch-ua":"\"Google Chrome\";v=\"87\", \" Not;A Brand\";v=\"99\", \"Chromium\";v=\"87\"",
-    "sec-ch-ua-mobile":"?0",
-    "sec-fetch-dest":"document",
-    "sec-fetch-mode":"navigate",
-    "sec-fetch-site":"none",
-    "upgrade-insecure-requests":"1",
-    "user-agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
-}
-
-const ranks = [
-    "Unranked",
-    "Silver I",
-    "Silver II",
-    "Silver III",
-    "Silver IV", 
-    "Silver Elite",
-    "Silver Elite Master",
-    "Gold Nova I",
-    "Gold Nova II",
-    "Gold Nova III",
-    "Gold Nova Master",
-    "Master Guardian I",
-    "Master Guardian II",
-    "Master Guardian Elite",
-    "Distinguished Master Guardian",
-    "Legendary Eagle",
-    "Legendary Eagle Master",
-    "Supreme Master First Class",
-    "Global Elite"
-]
 
 const vis = {}
+
+const ranks = [
+    "<:johnohno:746441494289973310>",
+    "<:skillgroup1:790415720244183060>",
+    "<:skillgroup2:790415760673079327>",
+    "<:skillgroup3:790415798140141588>",
+    "<:skillgroup4:790415811558637628>",
+    "<:skillgroup4:790415811558637628>",
+    "<:skillgroup5:790415823973515294>",
+    "<:skillgroup6:790415835705376829>",
+    "<:skillgroup7:790415849655238696>",
+    "<:skillgroup8:790415864558125086>",
+    "<:skillgroup9:790415879636254730>",
+    "<:skillgroup10:790415892701773854>",
+    "<:skillgroup11:790415928830853171>",
+    "<:skillgroup12:790415941204836374>",
+    "<:skillgroup13:790416009638182933>",
+    "<:skillgroup14:790416023853203506>",
+    "<:skillgroup15:790416035035086879>",
+    "<:skillgroup16:790416047139717120>",
+    "<:skillgroup17:790416058112147526>",
+    "<:skillgroup18:790416078991654972>"
+]
 
 async function fetchLiveData(browser, id) {
     const page = await browser.newPage();
@@ -73,7 +62,7 @@ function parseData($) {
             let identifier = !config.players[id] ? name : `**${config.players[id]}**`;
             let rank = Number(td3.slice(51,52));
 
-            id2 += id + rank
+            id2 += id + rank;
             sum += rank;
             if(rank > 0) tot++;
             return [identifier, rank];
