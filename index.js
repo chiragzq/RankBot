@@ -61,11 +61,10 @@ function parseData($) {
             let identifier = !config.players[id] ? name : `**${config.players[id]}**`;
             let rank = Number(td3.slice(51,52));
 
-            id2 += id + rank;
             sum += rank;
             if(rank > 0) tot++;
             return [identifier, rank];
-        }).sort((i, j) => i[1] - j[1]).reverse().map(row => row[0] + ": " + ranks[row[1]]), ranks[Math.round(sum / tot)]];
+        }).sort((i, j) => i[1] - j[1]).reverse().map(row => { id2 += "" + row; return row[0] + ": " + ranks[row[1]]}), ranks[Math.round(sum / tot)]];
     }), id2];
 }
 
