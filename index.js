@@ -60,7 +60,6 @@ function parseData($) {
             let name = $(tds[0]).find("span").text();
             let identifier = !config.players[id] ? name : `**${config.players[id]}**`;
             let rank = Number(td3.slice(51,52));
-            console.log(name + " " + rank + " " + ranks[rank]);
 
             id2 += id + rank;
             sum += rank;
@@ -71,10 +70,9 @@ function parseData($) {
 }
 
 async function sendWebhook(embed) {
-    console.log(embed);
     await axios.post(config.webhook, {
         embeds: [embed],
-        avatar: "https://i.imgur.com/FDHobOs.jpg"
+        avatar_url: "https://i.imgur.com/FDHobOs.jpg"
     })
 }
 
