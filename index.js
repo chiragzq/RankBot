@@ -35,11 +35,12 @@ const ranks = [
 
 async function fetchLiveData(browser, id) {
     const page = await browser.newPage();
+    await page.setDefaultNavigationTimeout(0); 
     await page.setUserAgent(userAgent.toString())
     await page.goto(`${config.base}/${id}/live`);
     const resp = await page.content();
     const json = JSON.parse(resp.slice(84, -20))
-    page.close();
+    await page.close();
     if(!json["map"]) return false;
     else return cheerio.load(`<div>${json["content"].replace(/&lt;/g,"<").replace(/&gt;/g,">")}</div>`);
 }
