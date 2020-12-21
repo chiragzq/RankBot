@@ -73,7 +73,8 @@ function parseData($) {
 async function sendWebhook(embed) {
     console.log(embed);
     await axios.post(config.webhook, {
-        embeds: [embed]
+        embeds: [embed],
+        avatar: "https://i.imgur.com/FDHobOs.jpg"
     })
 }
 
