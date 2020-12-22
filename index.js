@@ -33,6 +33,13 @@ const ranks = [
     "<:skillgroup18:790416078991654972>"
 ]
 
+const stacks = [
+    ":blue_square:",
+    ":green_square:",
+    ":red_square:",
+    ":orange_square:"
+]
+
 async function fetchLiveData(browser, id) {
     const page = await browser.newPage();
     await page.setDefaultNavigationTimeout(0); 
@@ -47,10 +54,35 @@ async function fetchLiveData(browser, id) {
 
 function parseData($) {
     let id2 = "";
+
+    let queueIDS = {};
+    let topPlayers = $(".match-player").toArray();
+    let groupUpdated = true;
+    let groupID = 0;
+    let soloID = 19;
+    topPlayers.forEach((player, i) => {
+        let friendLink = $(player).find(".friends-link").toArray();
+        if(friendLink.length == 0) {
+            queueIDS[$(player).attr("title")] = soloID--;
+            if(!groupUpdated) {
+                groupUpdated = true;
+                groupID++;
+            }
+        }
+        else {
+            queueIDS[$(topPlayers[i - 1]).attr("title")] = groupID;
+            queueIDS[$(player).attr("title")] = groupID;
+            groupUpdated = false;
+        }
+    });
+    // console.log(queueIDS);
+
     let bodies = $("table.scoreboard>tbody").toArray();
     let names = [];
+    let ranks2 = [[],[]];
     bodies.splice(1,1);
-    return [bodies.map(tbody => {
+
+    return [bodies.map((tbody, i) => {
         let rows = $(tbody).find("tr").toArray();
         let sum = 0;
         let tot = 0;
@@ -62,12 +94,15 @@ function parseData($) {
             let name = $(tds[0]).find("span").text();
             let identifier = !config.players[id] ? name : `**${config.players[id]}**`;
             let rank = Number(td3.slice(51,52));
+            ranks2[i].push(rank);
+
             names.push(name);
             sum += rank;
+
             if(rank > 0) tot++;
-            return [identifier, rank];
-        }).sort((i, j) => i[1] - j[1]).reverse().map(row => {return row[0] + ": " + ranks[row[1]]}), ranks[Math.round(sum / tot)]];
-    }), names.sort().join("")];
+            return [identifier, rank, queueIDS[name]];
+        }).sort((i, j) => i[1] - j[1]).reverse().map(row => {return `${row[2] < 10 ? stacks[row[2]] : ":black_large_square:"} ${row[0]}`}), ranks[Math.round(sum / tot)]];
+    }), names.sort().join(""), queueIDS, [ranks2[0].sort().reverse().map(x=>ranks[x]),ranks2[1].sort().reverse().map(x=>ranks[x])], $($('[style*="font-weight:500"]').toArray()[0]).text()];
 }
 
 async function sendWebhook(embed) {
@@ -94,12 +129,28 @@ async function refresh(browser) {
             fields: [
                 {
                     name: `Team 1 (average ${matchData[0][0][1]})`,
-                    value: matchData[0][0][0].join("\n")
+                    value: matchData[0][0][0].join("\n"),
+                    inline: true
+                },
+                {
+                    name: "Ranks",
+                    value: matchData[3][0].join("\n"),
+                    inline: true
+                },
+                {
+                    name: `Map`,
+                    value: `${matchData[4]} ${matchData[4] == "de_nuke" ? "<:nook:783565651583303700>" : ":poop:"}`
                 },
                 {
                     name: `Team 2 (average ${matchData[0][1][1]})`,
-                    value: matchData[0][1][0].join("\n")
-                }
+                    value: matchData[0][1][0].join("\n"),
+                    inline: true
+                },
+                {
+                    name: "Ranks",
+                    value: matchData[3][1].join("\n"),
+                    inline: true
+                },
             ]
         });
     }
