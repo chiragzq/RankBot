@@ -52,7 +52,24 @@ async function fetchLiveData(browser, id) {
     else return cheerio.load(`<div>${json["content"].replace(/&lt;/g,"<").replace(/&gt;/g,">")}</div>`);
 }
 
-function parseData($) {
+async function fetchHighestRank(browser, id) {
+    const page = await browser.newPage();
+    await page.setDefaultNavigationTimeout(0); 
+    await page.setUserAgent(userAgent.toString())
+    await page.goto(`${config.base}/${id}`);
+    const resp = await page.content();
+    page.close()
+    const $ = cheerio.load(resp);
+    const rankBox = $(`[style*="float:right; width:92px; height:120px; padding-top:56px; margin-left:32px"]`);
+    const img = $(rankBox).find("img").toArray()[1];
+    const src = $(img).attr("src");
+    if(src == undefined) return false;
+
+    let rank = Number(src.slice(41,-4));
+    return rank;
+}
+
+async function parseData(browser, $) {
     let id2 = "";
 
     let queueIDS = {};
@@ -75,34 +92,34 @@ function parseData($) {
             groupUpdated = false;
         }
     });
-    // console.log(queueIDS);
 
     let bodies = $("table.scoreboard>tbody").toArray();
     let names = [];
     let ranks2 = [[],[]];
     bodies.splice(1,1);
 
-    return [bodies.map((tbody, i) => {
+    return [(await Promise.all(bodies.map(async (tbody, i) => {
         let rows = $(tbody).find("tr").toArray();
         let sum = 0;
         let tot = 0;
-        return [rows.map(row => {
+        return [(await Promise.all(rows.map(async row => {
             let tds = $(row).find("td").toArray();
             let url = $(tds[0]).find("a").attr("href");
             let id = url.slice(8);
             let td3 = $(tds[2]).html();
             let name = $(tds[0]).find("span").text();
             let identifier = !config.players[id] ? name : `**${config.players[id]}**`;
-            let rank = Number(td3.slice(51,52));
-            ranks2[i].push(rank);
+            let rank = Number(td3.slice(51,-18)); 
+            let highestRank = await fetchHighestRank(browser, id)
+            ranks2[i].push([rank, highestRank ? highestRank : rank]);
 
             names.push(name);
             sum += rank;
 
             if(rank > 0) tot++;
             return [identifier, rank, queueIDS[name]];
-        }).sort((i, j) => i[1] - j[1]).reverse().map(row => {return `${row[2] < 10 ? stacks[row[2]] : ":black_large_square:"} ${row[0]}`}), ranks[Math.round(sum / tot)]];
-    }), names.sort().join(""), queueIDS, [ranks2[0].sort().reverse().map(x=>ranks[x]),ranks2[1].sort().reverse().map(x=>ranks[x])], $($('[style*="font-weight:500"]').toArray()[0]).text()];
+        }))).sort((i, j) => i[1] - j[1]).reverse().map(row => {return `${row[2] < 10 ? stacks[row[2]] : ":black_large_square:"} ${row[0]}`}), ranks[Math.round(sum / tot)]];
+    }))), names.sort().join(""), queueIDS, [ranks2[0].sort((x,y)=>x[0] - y[0]).reverse().map(x => x.map(y => ranks[y])),ranks2[1].sort((x,y)=>x[0] - y[0]).reverse().map(x => x.map(y => ranks[y]))], $($('[style*="font-weight:500"]').toArray()[0]).text()];
 }
 
 async function sendWebhook(embed) {
@@ -117,13 +134,11 @@ async function refresh(browser) {
         const doc = await fetchLiveData(browser, id);
         if(!doc) continue;
         
-        let matchData = parseData(doc);
-        // console.log(matchData[0]);
+        let matchData = await parseData(browser, doc);
         if(vis[matchData[1]]) {
             continue;
         }
         vis[matchData[1]] = true;
-        // `Match found for ${config.players[id]}:\n\nTeam 1 (average ${matchData[0][0][1]})\n${matchData[0][0][0].join("\n")}\n\nTeam 2: (average ${matchData[0][1~][1]})\n${matchData[0][1][0].join("\n")}`
         await sendWebhook({
             timestamp: new Date().toISOString(),
             fields: [
@@ -134,7 +149,12 @@ async function refresh(browser) {
                 },
                 {
                     name: "Ranks",
-                    value: matchData[3][0].join("\n"),
+                    value: matchData[3][0].map(x=>x[0]).join("\n"),
+                    inline: true
+                },
+                {
+                    name: "Highest Rank",
+                    value: matchData[3][0].map(x=>x[1]).join("\n"),
                     inline: true
                 },
                 {
@@ -148,11 +168,17 @@ async function refresh(browser) {
                 },
                 {
                     name: "Ranks",
-                    value: matchData[3][1].join("\n"),
+                    value: matchData[3][1].map(x=>x[0]).join("\n"),
+                    inline: true
+                },
+                {
+                    name: "Highest Rank",
+                    value: matchData[3][1].map(x=>x[1]).join("\n"),
                     inline: true
                 },
             ]
         });
+        await sleep(1000 * 60 * 10); 
     }
 }
 
@@ -164,6 +190,8 @@ async function sleep(ms) {
 
 (async function() {
     const browser = await puppeteer.launch({});
+
+    
 
     while(true) {
         await refresh(browser);
