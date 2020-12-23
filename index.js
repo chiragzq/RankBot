@@ -48,7 +48,7 @@ async function fetchLiveData(browser, id) {
     const resp = await page.content();
     const json = JSON.parse(resp.slice(84, -20))
     await page.close();
-    if(!json["map"]) return false;
+    if(resp.indexOf("This player is current not in a live match!") >= 0) return false;
     else return cheerio.load(`<div>${json["content"].replace(/&lt;/g,"<").replace(/&gt;/g,">")}</div>`);
 }
 
@@ -139,6 +139,7 @@ async function refresh(browser) {
             continue;
         }
         vis[matchData[1]] = true;
+        console.log(`Found match for ${config.players[id]}`);
         await sendWebhook({
             timestamp: new Date().toISOString(),
             fields: [
