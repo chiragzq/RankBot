@@ -122,9 +122,13 @@ async function parseData(browser, $) {
     }))), names.sort().join(""), queueIDS, [ranks2[0].sort((x,y)=>x[0] - y[0]).reverse().map(x => x.map(y => ranks[y])),ranks2[1].sort((x,y)=>x[0] - y[0]).reverse().map(x => x.map(y => ranks[y]))], $($('[style*="font-weight:500"]').toArray()[0]).text()];
 }
 
-async function sendWebhook(embed) {
+async function sendWebhook(url, embed) {
     await axios.post(config.webhook, {
         embeds: [embed],
+        avatar_url: "https://i.imgur.com/FDHobOs.jpg"
+    })
+    await axios.post(config.webhook, {
+        content: url,
         avatar_url: "https://i.imgur.com/FDHobOs.jpg"
     })
 }
@@ -140,7 +144,7 @@ async function refresh(browser) {
         }
         vis[matchData[1]] = true;
         console.log(`Found match for ${config.players[id]}`);
-        await sendWebhook({
+        await sendWebhook(`${config.base}/${id}#/live`, {
             timestamp: new Date().toISOString(),
             fields: [
                 {
